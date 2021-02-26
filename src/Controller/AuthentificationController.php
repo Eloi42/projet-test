@@ -75,9 +75,9 @@ class AuthentificationController extends AbstractController
 			}
 			dd($identifiant, $password, $reponse);
 				return new response(1);
-			// return $this->render('authentification/insertUser.html.twig', [
-				// 'controller_name' => "Ajout en base de données.",
-			// ]);
+				return $this->render('authentification/insertUser.html.twig',[
+					'controller_name' => "Ajout en base de données.",
+				]);
 	}
 	/**
      * @Route("/dashboard", name="dashboard")
@@ -89,4 +89,17 @@ class AuthentificationController extends AbstractController
 				'controller_name' => "Espace Client",
 		]);
 	}
+	/**
+     * @Route("/listeUser", name="listeUser")
+     */
+    public function listeUser(Request $request, EntityManagerInterface $manager): Response
+    {
+			//Requête qui récupère la liste des Users
+			$listeUser = $manager->getRepository(Utilisateur::class)->findAll();
+
+		return $this->render('authentification/listeUser.html.twig', [
+			'controller_name' => "Liste des Utilisateurs",
+			'listeUser' => $listeUser,
+        ]);
+    }
 }
