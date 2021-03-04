@@ -102,4 +102,15 @@ class AuthentificationController extends AbstractController
 			'listeUser' => $listeUser,
         ]);
     }
+	/**
+     * @Route("/deleteUser/{id}", name="deleteUser")
+     */
+    public function deleteUser(Request $request, EntityManagerInterface $manager, Utilisateur $id): Response
+	{
+
+		$manager->remove($id);
+		$manager->flush();
+
+		return $this->redirectToRoute('listeUser');
+	}
 }

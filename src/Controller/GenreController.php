@@ -29,6 +29,18 @@ class GenreController extends AbstractController
 			'controller_name' => "Formulaire de création d'un genre",
 		]);
 	}
+	/**
+     * @Route("/listegenre", name="listegenre")
+     */
+	  public function listeGenre(Request $request, EntityManagerInterface $manager): Response
+    {
+		//Requête qui récupère la liste des Users
+		$listeGenre = $manager->getRepository(Genre::class)->findAll();
+        return $this->render('genre/listeGenre.html.twig', [
+            'controller_name' => "Liste des genres",
+            'listeGenre' => $listeGenre,
+		]);
+	}
 	 /**
      * @Route("/insertGenreBdd", name="insertGenreBdd")
      */
@@ -42,5 +54,16 @@ class GenreController extends AbstractController
 		return $this->render('genre/insertGenre.html.twig', [
 			'controller_name' => "Ajout en base de données.",
 		]);
+	}
+	/**
+     * @Route("/deleteGenre", name="deleteGenre")
+     */
+	 public function deleteGenre(Request $request, EntityManagerInterface $manager, Genre $id): Response
+    {
+		
+		$manager->remove($id);
+		$manager->flush();
+			
+       return $this->redirectToRoute('listeGenre');
 	}
 }
