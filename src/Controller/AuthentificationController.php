@@ -22,31 +22,72 @@ class AuthentificationController extends AbstractController
         ]);
     }
 	/**
+     * @Route("/logout", name="logout")
+     */
+	 public function logout(Request $request, EntityManagerInterface $manager): Response
+    {
+		$sess = $request->getSession();
+		$sess->remove("idUtilisateur");
+		$sess->invalidate();
+		$sess->clear();
+		$sess=$request->getSession()->clear();
+        return $this->redirectToRoute('authentification');
+    }
+	/**
      * @Route("/insertUser", name="insertUser")
      */
-    public function insertUser(): Response
+    public function insertUser(Request $request): Response
     {
-        return $this->render('authentification/insertUser.html.twig', [
-            'controller_name' => "Insertion d'un nouvel Utilisateur",
-        ]);
+		$sess = $request->getSession();
+		if($sess->get("idUtilisateur")){
+			return $this->render('authentification/insertUser.html.twig', [
+				'controller_name' => "Insertion d'un nouvel Utilisateur",
+			]);
+		}else{
+			return $this->redirectToRoute('authentification');
+		}
     }
 	/**
      * @Route("/insertUserBdd", name="insertUserBdd")
      */
-    public function insertUserBdd(Request $request, EntityManagerInterface $manager): Response
+     public function insertUserBdd(Request $request, EntityManagerInterface $manager): Response
     {
+		$sess = $request->getSession();
+		if($sess->get("idUtilisateur")){
 			$User = new Utilisateur();
 			$User->setNom($request->request->get('nom'));
 			$User->setPrenom($request->request->get('prenom'));
 			$User->setCode($request->request->get('code'));
 			$User->setSalt($request->request->get('salt'));
-        
+			
 			$manager->persist($User);
 			$manager->flush();
-		
-        return $this->render('authentification/insertUser.html.twig', [
-            'controller_name' => "Ajout en base de données",
-        ]);
+			
+				
+			return $this->render('authentification/insertUser.html.twig', [
+				'controller_name' => "Ajout en base de données.",
+			]);
+		}else{
+			return $this->redirectToRoute('authentification');
+		}
+    }
+	/**
+     * @Route("/listeUser", name="listeUser")
+     */
+     public function listeUser(Request $request, EntityManagerInterface $manager): Response
+    {
+		$sess = $request->getSession();
+		if($sess->get("idUtilisateur")){
+			//Requête qui récupère la liste des Users
+			$listeUser = $manager->getRepository(Utilisateur::class)->findAll();
+					
+			return $this->render('authentification/listeUser.html.twig', [
+				'controller_name' => "Liste des Utilisateurs",
+				'listeUser' => $listeUser,
+			]);
+		}else{
+			return $this->redirectToRoute('authentification');
+		}
     }
 	/**
      * @Route("/connexion", name="connexion")
@@ -80,37 +121,32 @@ class AuthentificationController extends AbstractController
 				]);
 	}
 	/**
-     * @Route("/dashboard", name="dashboard")
-     */
-    public function dashboard(Request $request, EntityManagerInterface $manager): Response
-    {
-			 $sess = $request->getSession();
-			return $this->render('authentification/dashboard.html.twig',[
-				'controller_name' => "Espace Client",
-		]);
-	}
-	/**
-     * @Route("/listeUser", name="listeUser")
-     */
-    public function listeUser(Request $request, EntityManagerInterface $manager): Response
-    {
-			//Requête qui récupère la liste des Users
-			$listeUser = $manager->getRepository(Utilisateur::class)->findAll();
-
-		return $this->render('authentification/listeUser.html.twig', [
-			'controller_name' => "Liste des Utilisateurs",
-			'listeUser' => $listeUser,
-        ]);
-    }
-	/**
      * @Route("/deleteUser/{id}", name="deleteUser")
      */
     public function deleteUser(Request $request, EntityManagerInterface $manager, Utilisateur $id): Response
-	{
-
-		$manager->remove($id);
-		$manager->flush();
-
-		return $this->redirectToRoute('listeUser');
-	}
+    {
+	
+		$sess = $request->getSession();
+		if($sess->get("idUtilisateur")){
+			$manager->remove($id);
+			$manager->flush();
+			return $this->redirectToRoute('listeUser');
+		}else{
+			return $this->redirectToRoute('authentification');
+		}
+    }
+	/**
+     * @Route("/dashboard", name="dashboard")
+     */
+     public function dashboard(Request $request, EntityManagerInterface $manager): Response
+    {
+		$sess = $request->getSession();
+		if($sess->get("idUtilisateur")){
+			return $this->render('authentification/dashboard.html.twig',[
+			 'controller_name' => "Espace Client",
+			 ]);
+		}else{
+			return $this->redirectToRoute('authentification');
+		}
+    }
 }
