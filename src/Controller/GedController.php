@@ -60,7 +60,7 @@ public function insertGed(Request $request, EntityManagerInterface $manager): Re
 				$Document->setNom($request->request->get('nom'));
 				$Document->setTypeId($manager->getRepository(Genre::class)->findOneById($request->request->get('genre')));
 				$Document->setCreatedAt(new \Datetime);	
-				$Document->setChemin($newFilename);	
+				$Document->setChemiin($newFilename);	
 				
 				$manager->persist($Document);
 				$manager->flush();
@@ -93,6 +93,29 @@ public function insertGed(Request $request, EntityManagerInterface $manager): Re
 		}
 	}
 	/**
+     * @Route("/partageGed", name="partageGed")
+     */
+    public function partageGed(Request $request, EntityManagerInterface $manager): Response
+	{
+		$sess = $request->getSession();
+		if($sess->get("idUtilisateur")){
+			//Requête le user en focntion du formulaire
+			$user = $manager->getRepository(Utilisateur::class)->findOneById($request->request->get('utilisateur'));
+			$autorisation = $manager->getRepository(Autorisation::class)->findOneById($request->request->get('autorisation'));
+			$document = $manager->getRepository(Document::class)->findOneById($request->request->get('doc'));
+			$acces = new Acces();
+			$acces->setUtilisateurId($user);
+			$acces->setAutorisationId($autorisation);
+			$acces->setDocumentId($document);
+			$manager->persist($acces);
+			$manager->flush();
+
+			return $this->redirectToRoute('listeGed');
+		}else{
+			return $this->redirectToRoute('authentification');
+		}
+	}
+	/**
      * @Route("/listeGed", name="listeGed")
      */
     public function listeGed(Request $request, EntityManagerInterface $manager): Response
@@ -100,11 +123,13 @@ public function insertGed(Request $request, EntityManagerInterface $manager): Re
 		$sess = $request->getSession();
 		if($sess->get("idUtilisateur")){
 			//Requête qui récupère la liste des Users
-			$listeGed = $manager->getRepository(Acces::class)->findByUtilisateurId($sess->get("idUtilisateur"));
+			$listeGed = $manager->getRepository(Acces::class)->findByUtilisateurID($sess->get("idUtilisateur"));
 					
 			return $this->render('ged/listeGed.html.twig', [
 				'controller_name' => "Liste des Documents",
 				'listeGed' => $listeGed,
+				'listeUsers' => $manager->getRepository(Utilisateur::class)->findAll(),
+				'listeAutorisations' => $manager->getRepository(Autorisation::class)->findAll(),
 			]);
 		}else{
 			return $this->redirectToRoute('authentification');
@@ -125,7 +150,7 @@ public function insertGed(Request $request, EntityManagerInterface $manager): Re
 			}	
 			//supprimer le fichier du disuqe dur
 			//suppression physique du document :
-			if(unlink("upload/".$id->getChemin())){
+			if(unlink("upload/".$id->getChemiin())){
 			//suppression du lien dans la base de données
 				$manager->remove($id);
 				$manager->flush();

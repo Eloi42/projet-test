@@ -31,7 +31,7 @@ class GenreController extends AbstractController
 		]);
 	}
 	/**
-     * @Route("/listegenre", name="listegenre")
+     * @Route("/listeGenre", name="listeGenre")
      */
 	  public function listeGenre(Request $request, EntityManagerInterface $manager): Response
     {
