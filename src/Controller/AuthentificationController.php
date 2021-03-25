@@ -8,7 +8,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Utilisateur;
-
+use App\Entity\Acces;
+use App\Entity\Autorisation;
 
 class AuthentificationController extends AbstractController
 {
@@ -142,8 +143,45 @@ class AuthentificationController extends AbstractController
     {
 		$sess = $request->getSession();
 		if($sess->get("idUtilisateur")){
+			//*******************Requetes Mysql*******************
+			//Récupération du nombre de document
+			$listeDocuments = $manager->getRepository(Acces::class)->findByUtilisateurID($sess->get("idUtilisateur"));
+			$listeDocumentAll = $manager->getRepository(Acces::class)->findAll(); 
+			$listeUsers = $manager->getRepository(Utilisateur::class)->findAll();
+			$listeAutorisations = $manager->getRepository(Autorisation::class)->findAll();
+			//*********************Variables*********************
+			$flag = 0 ; //indique que le document privé
+			$nbDocument = 0;
+			$nbDocumentPrives = 0;
+			$documentPrives = Array();
+			$lastDocument = new \Datetime("2000-01-01");
+			
+			foreach($listeDocuments as $val){
+				$nbDocument++;	
+				$document = $val->getDocumentId()->getId();
+				if($val->getDocumentId()->getCreatedAt() > $lastDocument){
+					$lastDocument = $val->getDocumentId()->getCreatedAt();
+					$documentDate = $val->getDocumentId();
+					
+				}
+				foreach($listeDocumentAll as $val2){
+					if($val2->getDocumentId()->getId() == $document && $val2->getUtilisateurId()->getId() != $sess->get("idUtilisateur") )
+						$flag++;	
+				}
+				if($flag == 0){
+					$documentPrives[] = $val ;
+					$nbDocumentPrives ++;
+				}
+				$flag =0;
+			}
 			return $this->render('authentification/dashboard.html.twig',[
 			 'controller_name' => "Espace Client",
+			 'nb_document' => $nbDocument,
+			 'listeDocumentPrives' => $documentPrives,
+			 'nbDocumentPrives' => $nbDocumentPrives,
+			 'listeUsers' => $listeUsers,
+			 'listeAutorisations' => $listeAutorisations,
+			 'documentDate' => $documentDate,
 			 ]);
 		}else{
 			return $this->redirectToRoute('authentification');

@@ -142,13 +142,13 @@ public function insertGed(Request $request, EntityManagerInterface $manager): Re
     {
 		$sess = $request->getSession();
 		if($sess->get("idUtilisateur")){
-			//il faut supprimer le liend ans acces
+			//il faut supprimer le liend dans acces
 			$recupListeAcces = $manager->getRepository(Acces::class)->findByDocumentId($id);
 			foreach($recupListeAcces as $doc){
 				$manager->remove($doc);
 				$manager->flush();
 			}	
-			//supprimer le fichier du disuqe dur
+			//supprimer le fichier du disque dur
 			//suppression physique du document :
 			if(unlink("upload/".$id->getChemiin())){
 			//suppression du lien dans la base de données
